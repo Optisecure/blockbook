@@ -43,7 +43,7 @@ func (b *PigeonRPC) Initialize() error {
 	params := GetChainParams(chainName)
 
 	// always create parser
-	b.Parser = NewDashParser(params, b.ChainConfig)
+	b.Parser = NewPigeonParser(params, b.ChainConfig)
 
 	// parameters for getInfo request
 	if params.Net == MainnetMagic {
