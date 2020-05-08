@@ -1,0 +1,68 @@
+{
+    "coin": {
+      "name": "Pigeoncoin Testnet",
+      "shortcut": "tPGN",
+      "label": "Pigeoncoin Testnet",
+      "alias": "pigeoncoin_testnet"
+    },
+    "ports": {
+      "backend_rpc": 7898,
+      "backend_message_queue": 46111,
+      "blockbook_internal": 12444,
+      "blockbook_public": 3000
+    },
+    "ipc": {
+      "rpc_url_template": "http://127.0.0.1:{{.Ports.BackendRPC}}",
+      "rpc_user": "rpc",
+      "rpc_pass": "rpc",
+      "rpc_timeout": 25,
+      "message_queue_binding_template": "tcp://127.0.0.1:{{.Ports.BackendMessageQueue}}"
+    },
+    "backend": {
+      "package_name": "backend-pigeoncoin-testnet",
+      "package_revision": "satoshilabs-1",
+      "system_user": "pigeoncoin",
+      "version": "0.17.1.3",
+      "binary_url": "https://github.com/akshaynexus/pigeoncoin-dash/releases/download/v0.17.1.3/pigeoncoin-0.17.1.3-x86_64-linux-gnu.tar.gz",
+      "verification_type": "sha256",
+      "verification_source": "df3ca0fe3c0a6ecb517940f9d557b7c976f9e3c2376a1e9a9c6001db7f3d7c81",
+      "extract_command": "tar -C backend --strip 1 -xf",
+      "exclude_files": [
+        "bin/pigeon-qt"
+      ],
+      "exec_command_template": "{{.Env.BackendInstallPath}}/{{.Coin.Alias}}/bin/pigeond -datadir={{.Env.BackendDataPath}}/{{.Coin.Alias}}/backend -conf={{.Env.BackendInstallPath}}/{{.Coin.Alias}}/{{.Coin.Alias}}.conf -pid=/run/{{.Coin.Alias}}/{{.Coin.Alias}}.pid",
+      "logrotate_files_template": "{{.Env.BackendDataPath}}/{{.Coin.Alias}}/backend/testnet5/*.log",
+      "postinst_script_template": "",
+      "service_type": "forking",
+      "service_additional_params_template": "",
+      "protect_memory": true,
+      "mainnet": false,
+      "server_config_file": "bitcoin_like.conf",
+      "client_config_file": "bitcoin_like_client.conf",
+      "additional_params": {
+        "mempoolexpiry": 72
+      }
+    },
+    "blockbook": {
+      "package_name": "blockbook-pigeoncoin-testnet",
+      "system_user": "blockbook-pigeoncoin",
+      "internal_binding_template": ":{{.Ports.BlockbookInternal}}",
+      "public_binding_template": ":{{.Ports.BlockbookPublic}}",
+      "explorer_url": "",
+      "additional_params": "",
+      "block_chain": {
+        "parse": true,
+        "subversion": "/Pigeon Core:0.17.1.3/",
+        "mempool_workers": 8,
+        "mempool_sub_workers": 2,
+        "block_addresses_to_keep": 300,
+        "xpub_magic": 55801802,
+        "slip44": 1,
+        "additional_params": {}
+      }
+    },
+    "meta": {
+      "package_maintainer": "IT Admin",
+      "package_maintainer_email": "it@satoshilabs.com"
+    }
+  }
