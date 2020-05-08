@@ -93,8 +93,8 @@ func init() {
 	BlockChainFactories["Groestlcoin Testnet"] = grs.NewGroestlcoinRPC
 	BlockChainFactories["PIVX"] = pivx.NewPivXRPC
 	BlockChainFactories["PIVX Testnet"] = pivx.NewPivXRPC
-	BlockChainFactories["Pigeoncoin"] = pigeoncoin.PigeonRPC
-	BlockChainFactories["Pigeoncoin Testnet"] = pigeoncoin.PigeonRPC
+	BlockChainFactories["Pigeoncoin"] = pigeoncoin.NewPigeonRPC
+	BlockChainFactories["Pigeoncoin Testnet"] = pigeoncoin.NewPigeonRPC
 	BlockChainFactories["Polis"] = polis.NewPolisRPC
 	BlockChainFactories["Zcoin"] = xzc.NewZcoinRPC
 	BlockChainFactories["Fujicoin"] = fujicoin.NewFujicoinRPC
