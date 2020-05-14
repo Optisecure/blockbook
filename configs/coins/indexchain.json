@@ -1,9 +1,9 @@
 {
   "coin": {
-    "name": "Index",
+    "name": "IndexChain",
     "shortcut": "IDX",
-    "label": "Index",
-    "alias": "index"
+    "label": "IndexChain",
+    "alias": "IndexChain"
   },
   "ports": {
     "backend_rpc": 18090,
@@ -74,7 +74,7 @@
     }
   },
   "meta": {
-    "package_maintainer": "Putta Khunchalee",
-    "package_maintainer_email": "putta@index.io"
+    "package_maintainer": "Akshay CM",
+    "package_maintainer_email": "akshaycm@hotmail.com"
   }
 }

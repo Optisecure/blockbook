@@ -2,11 +2,8 @@ package index
 
 import (
 	"bytes"
-	"encoding/binary"
 	"encoding/json"
 	"io"
-
-	"github.com/martinboehm/btcd/chaincfg/chainhash"
 	"github.com/martinboehm/btcd/wire"
 	"github.com/martinboehm/btcutil/chaincfg"
 	"github.com/trezor/blockbook/bchain"
@@ -58,14 +55,14 @@ func init() {
 	RegtestParams.Net = RegtestMagic
 }
 
-// IndexParser handle
-type IndexParser struct {
+// IndexChainParser handle
+type IndexChainParser struct {
 	*btc.BitcoinParser
 }
 
-// NewIndexParser returns new IndexParser instance
-func NewIndexParser(params *chaincfg.Params, c *btc.Configuration) *IndexParser {
-	return &IndexParser{
+// NewIndexChainParser returns new IndexChainParser instance
+func NewIndexChainParser(params *chaincfg.Params, c *btc.Configuration) *IndexChainParser {
+	return &IndexChainParser{
 		BitcoinParser: btc.NewBitcoinParser(params, c),
 	}
 }
@@ -97,7 +94,7 @@ func GetChainParams(chain string) *chaincfg.Params {
 }
 
 // GetAddressesFromAddrDesc returns addresses for given address descriptor with flag if the addresses are searchable
-func (p *IndexParser) GetAddressesFromAddrDesc(addrDesc bchain.AddressDescriptor) ([]string, bool, error) {
+func (p *IndexChainParser) GetAddressesFromAddrDesc(addrDesc bchain.AddressDescriptor) ([]string, bool, error) {
 
 	if len(addrDesc) > 0 {
 		switch addrDesc[0] {
@@ -116,60 +113,23 @@ func (p *IndexParser) GetAddressesFromAddrDesc(addrDesc bchain.AddressDescriptor
 }
 
 // PackTx packs transaction to byte array using protobuf
-func (p *IndexParser) PackTx(tx *bchain.Tx, height uint32, blockTime int64) ([]byte, error) {
+func (p *IndexChainParser) PackTx(tx *bchain.Tx, height uint32, blockTime int64) ([]byte, error) {
 	return p.BaseParser.PackTx(tx, height, blockTime)
 }
 
 // UnpackTx unpacks transaction from protobuf byte array
-func (p *IndexParser) UnpackTx(buf []byte) (*bchain.Tx, uint32, error) {
+func (p *IndexChainParser) UnpackTx(buf []byte) (*bchain.Tx, uint32, error) {
 	return p.BaseParser.UnpackTx(buf)
 }
 
 // ParseBlock parses raw block to our Block struct
-func (p *IndexParser) ParseBlock(b []byte) (*bchain.Block, error) {
+func (p *IndexChainParser) ParseBlock(b []byte) (*bchain.Block, error) {
 	reader := bytes.NewReader(b)
 
 	// parse standard block header first
 	header, err := parseBlockHeader(reader)
 	if err != nil {
 		return nil, err
-	}
-
-	// then MTP header
-	if isMTP(header) {
-		mtpHeader := MTPBlockHeader{}
-		mtpHashData := MTPHashData{}
-
-		// header
-		err = binary.Read(reader, binary.LittleEndian, &mtpHeader)
-		if err != nil {
-			return nil, err
-		}
-
-		// hash data
-		err = binary.Read(reader, binary.LittleEndian, &mtpHashData)
-		if err != nil {
-			return nil, err
-		}
-
-		// proof
-		for i := 0; i < MTPL*3; i++ {
-			var numberProofBlocks uint8
-
-			err = binary.Read(reader, binary.LittleEndian, &numberProofBlocks)
-			if err != nil {
-				return nil, err
-			}
-
-			for j := uint8(0); j < numberProofBlocks; j++ {
-				var mtpData [16]uint8
-
-				err = binary.Read(reader, binary.LittleEndian, mtpData[:])
-				if err != nil {
-					return nil, err
-				}
-			}
-		}
 	}
 
 	// parse txs
@@ -205,7 +165,7 @@ func (p *IndexParser) ParseBlock(b []byte) (*bchain.Block, error) {
 }
 
 // ParseTxFromJson parses JSON message containing transaction and returns Tx struct
-func (p *IndexParser) ParseTxFromJson(msg json.RawMessage) (*bchain.Tx, error) {
+func (p *IndexChainParser) ParseTxFromJson(msg json.RawMessage) (*bchain.Tx, error) {
 	var tx bchain.Tx
 	err := json.Unmarshal(msg, &tx)
 	if err != nil {
@@ -227,7 +187,7 @@ func (p *IndexParser) ParseTxFromJson(msg json.RawMessage) (*bchain.Tx, error) {
 	return &tx, nil
 }
 
-func (p *IndexParser) parseIndexTx(tx *bchain.Tx) error {
+func (p *IndexChainParser) parseIndexTx(tx *bchain.Tx) error {
 	for i := range tx.Vin {
 		vin := &tx.Vin[i]
 
@@ -247,24 +207,17 @@ func (p *IndexParser) parseIndexTx(tx *bchain.Tx) error {
 func parseBlockHeader(r io.Reader) (*wire.BlockHeader, error) {
 	h := &wire.BlockHeader{}
 	err := h.Deserialize(r)
+	if err != nil {
+		return nil, err
+	}
+	sigLength, err := wire.ReadVarInt(r, 0)
+	if err != nil {
+		return nil, err
+	}
+	sigBuf := make([]byte, sigLength)
+	_, err = io.ReadFull(r, sigBuf)
+	if err != nil {
+		return nil, err
+	}
 	return h, err
-}
-
-func isMTP(h *wire.BlockHeader) bool {
-	epoch := h.Timestamp.Unix()
-
-	// the genesis block never be MTP block
-	return epoch > GenesisBlockTime && epoch >= SwitchToMTPBlockHeader
-}
-
-type MTPHashData struct {
-	HashRootMTP [16]uint8
-	BlockMTP    [128][128]uint64
-}
-
-type MTPBlockHeader struct {
-	VersionMTP   int32
-	MTPHashValue chainhash.Hash
-	Reserved1    chainhash.Hash
-	Reserved2    chainhash.Hash
 }

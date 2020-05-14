@@ -10,11 +10,11 @@ import (
 	"github.com/trezor/blockbook/bchain/coins/btc"
 )
 
-type IndexRPC struct {
+type IndexChainRPC struct {
 	*btc.BitcoinRPC
 }
 
-func NewIndexRPC(config json.RawMessage, pushHandler func(bchain.NotificationType)) (bchain.BlockChain, error) {
+func NewIndexChainRPC(config json.RawMessage, pushHandler func(bchain.NotificationType)) (bchain.BlockChain, error) {
 	// init base implementation
 	bc, err := btc.NewBitcoinRPC(config, pushHandler)
 	if err != nil {
@@ -22,7 +22,7 @@ func NewIndexRPC(config json.RawMessage, pushHandler func(bchain.NotificationTyp
 	}
 
 	// init index implementation
-	zc := &IndexRPC{
+	zc := &IndexChainRPC{
 		BitcoinRPC: bc.(*btc.BitcoinRPC),
 	}
 
@@ -35,7 +35,7 @@ func NewIndexRPC(config json.RawMessage, pushHandler func(bchain.NotificationTyp
 	return zc, nil
 }
 
-func (zc *IndexRPC) Initialize() error {
+func (zc *IndexChainRPC) Initialize() error {
 	ci, err := zc.GetChainInfo()
 	if err != nil {
 		return err
@@ -45,7 +45,7 @@ func (zc *IndexRPC) Initialize() error {
 	params := GetChainParams(chainName)
 
 	// always create parser
-	zc.Parser = NewIndexParser(params, zc.ChainConfig)
+	zc.Parser = NewIndexChainParser(params, zc.ChainConfig)
 
 	// parameters for getInfo request
 	if params.Net == MainnetMagic {
@@ -61,7 +61,7 @@ func (zc *IndexRPC) Initialize() error {
 	return nil
 }
 
-func (zc *IndexRPC) GetBlock(hash string, height uint32) (*bchain.Block, error) {
+func (zc *IndexChainRPC) GetBlock(hash string, height uint32) (*bchain.Block, error) {
 	var err error
 
 	if hash == "" {
@@ -96,7 +96,7 @@ func (zc *IndexRPC) GetBlock(hash string, height uint32) (*bchain.Block, error) 
 	return block, nil
 }
 
-func (zc *IndexRPC) GetBlockInfo(hash string) (*bchain.BlockInfo, error) {
+func (zc *IndexChainRPC) GetBlockInfo(hash string) (*bchain.BlockInfo, error) {
 	glog.V(1).Info("rpc: getblock (verbosity=true) ", hash)
 
 	res := btc.ResGetBlockInfo{}
@@ -117,7 +117,7 @@ func (zc *IndexRPC) GetBlockInfo(hash string) (*bchain.BlockInfo, error) {
 	return &res.Result, nil
 }
 
-func (zc *IndexRPC) GetBlockWithoutHeader(hash string, height uint32) (*bchain.Block, error) {
+func (zc *IndexChainRPC) GetBlockWithoutHeader(hash string, height uint32) (*bchain.Block, error) {
 	data, err := zc.GetBlockRaw(hash)
 	if err != nil {
 		return nil, err
@@ -134,7 +134,7 @@ func (zc *IndexRPC) GetBlockWithoutHeader(hash string, height uint32) (*bchain.B
 	return block, nil
 }
 
-func (zc *IndexRPC) GetBlockRaw(hash string) ([]byte, error) {
+func (zc *IndexChainRPC) GetBlockRaw(hash string) ([]byte, error) {
 	glog.V(1).Info("rpc: getblock (verbosity=false) ", hash)
 
 	res := btc.ResGetBlockRaw{}
@@ -155,7 +155,7 @@ func (zc *IndexRPC) GetBlockRaw(hash string) ([]byte, error) {
 	return hex.DecodeString(res.Result)
 }
 
-func (zc *IndexRPC) GetTransactionForMempool(txid string) (*bchain.Tx, error) {
+func (zc *IndexChainRPC) GetTransactionForMempool(txid string) (*bchain.Tx, error) {
 	glog.V(1).Info("rpc: getrawtransaction nonverbose ", txid)
 
 	res := btc.ResGetRawTransactionNonverbose{}
@@ -183,7 +183,7 @@ func (zc *IndexRPC) GetTransactionForMempool(txid string) (*bchain.Tx, error) {
 	return tx, nil
 }
 
-func (zc *IndexRPC) GetTransaction(txid string) (*bchain.Tx, error) {
+func (zc *IndexChainRPC) GetTransaction(txid string) (*bchain.Tx, error) {
 	r, err := zc.getRawTransaction(txid)
 	if err != nil {
 		return nil, err
@@ -198,14 +198,14 @@ func (zc *IndexRPC) GetTransaction(txid string) (*bchain.Tx, error) {
 	return tx, nil
 }
 
-func (zc *IndexRPC) GetTransactionSpecific(tx *bchain.Tx) (json.RawMessage, error) {
+func (zc *IndexChainRPC) GetTransactionSpecific(tx *bchain.Tx) (json.RawMessage, error) {
 	if csd, ok := tx.CoinSpecificData.(json.RawMessage); ok {
 		return csd, nil
 	}
 	return zc.getRawTransaction(tx.Txid)
 }
 
-func (zc *IndexRPC) getRawTransaction(txid string) (json.RawMessage, error) {
+func (zc *IndexChainRPC) getRawTransaction(txid string) (json.RawMessage, error) {
 	glog.V(1).Info("rpc: getrawtransaction ", txid)
 
 	res := btc.ResGetRawTransaction{}
