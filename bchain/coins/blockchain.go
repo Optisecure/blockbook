@@ -75,7 +75,7 @@ func init() {
 	BlockChainFactories["Decred"] = dcr.NewDecredRPC
 	BlockChainFactories["Decred Testnet"] = dcr.NewDecredRPC
 	BlockChainFactories["GameCredits"] = gamecredits.NewGameCreditsRPC
-	BlockChainFactories["IndexChain"] = index.NewIndexRPC
+	BlockChainFactories["IndexChain"] = indexchain.NewIndexChainRPC
 	BlockChainFactories["Koto"] = koto.NewKotoRPC
 	BlockChainFactories["Koto Testnet"] = koto.NewKotoRPC
 	BlockChainFactories["Litecoin"] = litecoin.NewLitecoinRPC
