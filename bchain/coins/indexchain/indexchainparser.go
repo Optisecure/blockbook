@@ -210,14 +210,18 @@ func parseBlockHeader(r io.Reader) (*wire.BlockHeader, error) {
 	if err != nil {
 		return nil, err
 	}
-	sigLength, err := wire.ReadVarInt(r, 0)
-	if err != nil {
-		return nil, err
+	if h.Nonce == 0 {
+		//Parse vchBlocksig only when nonce is 0 which is a PoS Block
+		sigLength, err := wire.ReadVarInt(r, 0)
+		if err != nil {
+			return nil, err
+		}
+		sigBuf := make([]byte, sigLength)
+		_, err = io.ReadFull(r, sigBuf)
+		if err != nil {
+			return nil, err
+		}
 	}
-	sigBuf := make([]byte, sigLength)
-	_, err = io.ReadFull(r, sigBuf)
-	if err != nil {
-		return nil, err
-	}
+
 	return h, err
 }
